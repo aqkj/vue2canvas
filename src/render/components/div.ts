@@ -50,7 +50,7 @@ export default class DIV {
    */
   // getCurPosition() {
   //   // 当前元素
-  //   const element = this.element
+  //   const element = this.element 
   //   // 父级
   //   const parent = element.parent
   //   // 基础坐标
