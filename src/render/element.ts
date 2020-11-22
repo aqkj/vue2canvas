@@ -1,4 +1,7 @@
 // 元素操作
+
+import Vue from ".."
+
 /**
  * 元素接口
  */
@@ -19,6 +22,10 @@ interface IAttrs {
   backgroundColor: string
   /** 展示方案 */
   display: 'block' | 'inline' | 'inline-block' | 'none' | 'flex'
+  /** 溢出处理 */
+  overflow: 'auto' | 'visible' | 'hidden' | 'scroll'
+  /** 背景图片 */
+  backgroundImage: string
 }
 interface IPosition {
   x: number
@@ -32,6 +39,8 @@ interface ISize {
  * Vue元素
  */
 export class VueElement {
+  /** vue实例 */
+  vm?: Vue
   /** 类型 */
   type: string
   // 属性对象
@@ -105,6 +114,7 @@ export class VueElement {
     this.type = options.type
     this.attrs = options.attrs || {}
     linkParent(this, options.children)
+    makeRender(this)
   }
 }
 /**
@@ -136,6 +146,13 @@ function linkParent(parent: VueElement, children: any) {
       return item
     })
   }
+}
+/**
+ * 创建渲染方法
+ * @param vm 
+ */
+function makeRender(vm: VueElement) {
+
 }
 /**
  * 创建元素方法

@@ -16,11 +16,18 @@ const app = new Vue({
         // width: 200
       },[
         h('div', {
-          backgroundColor: '#5ea',
+          backgroundColor: 'yellow',
           height: 400,
-          width: 200
+          width: 200,
+          overflow: 'scroll'
         },[
-          123
+          h('div', {
+            backgroundColor: 'white',
+            height: 100,
+            width: 600
+          },[
+            123
+          ])
         ])
       ]),
       h('div', {
@@ -39,6 +46,7 @@ const app = new Vue({
       ]),
       h('div', {
         backgroundColor: 'blue',
+        backgroundImage: 'https://file.40017.cn/huochepiao/activity/20190911compensate/img/headimg.png',
         height: 101,
         width: 100
       },[

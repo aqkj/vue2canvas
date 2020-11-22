@@ -1,6 +1,6 @@
 // 渲染方法
 
-import { VueElement } from "./element"
+import { createElement, VueElement } from "./element"
 import * as componets from './components'
 import Vue from "../vue"
 const renderComponents: Record<string, any> = componets
@@ -11,12 +11,7 @@ const renderComponents: Record<string, any> = componets
 export function render(vm: Vue, element: VueElement) {
   // 渲染组件
   componentsRender(vm, element)
-  // 判断是否存在子元素，递归渲染
-  if (element.children && element.children.length) {
-    element.children.forEach(item => {
-      render(vm, item)
-    })
-  }
+  
 }
 /**
  * 渲染方法

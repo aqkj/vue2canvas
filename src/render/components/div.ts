@@ -1,7 +1,8 @@
 // div组件
 import Vue from "../..";
 import { VueElement } from "../element";
-
+import { render } from "../render";
+const imgCache: Record<string, HTMLImageElement> = {}
 /**
  * 渲染div组件
  */
@@ -11,9 +12,14 @@ export default class DIV {
     this.ctx = this.vm.$ctx
   }
   render() {
-    // this.parseOverflow()
+    this.ctx.save()
     this.createBox()
     this.drawColor()
+    this.drawImage()
+    this.parseOverflow()
+    // 渲染子元素
+    this.renderChild()
+    this.ctx.restore()
   }
   /**
    * 创建盒子方法
@@ -26,8 +32,12 @@ export default class DIV {
     // this.ctx.rect(position.x, position.y, boxSize.width, boxSize.height)
     // this.ctx.stroke()
   }
+  /**
+   * 颜色处理
+   */
   drawColor() {
     const backgroundColor = this.element.attrs.backgroundColor || ''
+    // 判断背景颜色是否存在
     if (backgroundColor) {
       const boxSize = this.element.boxSize || {}
       const position = this.element.curPosition
@@ -37,13 +47,57 @@ export default class DIV {
       this.ctx.fill()
     }
   }
+  /**
+   * 绘制图片
+   */
+  drawImage() {
+    const backgroundImage = this.element.attrs.backgroundImage || ''
+    // 判断背景图是否存在
+    if (backgroundImage) {
+      const boxSize = this.element.boxSize || {}
+      const position = this.element.curPosition
+      if (!imgCache[backgroundImage]) {
+        const img = document.createElement('img')
+        img.onload = () => {
+          this.ctx.drawImage(img, position.x, position.y, boxSize.width, boxSize.height)
+        }
+        img.src = backgroundImage
+        imgCache[backgroundImage] = img
+      } else {
+        this.ctx.drawImage(imgCache[backgroundImage], position.x, position.y, boxSize.width, boxSize.height)
+      }
+    }
+  }
+  /**
+   * 溢出处理
+   */
   parseOverflow() {
-    const boxSize = this.element.boxSize
-    const position = this.element.curPosition
-    this.ctx.beginPath();
-    this.ctx.rect(position.x, position.y, boxSize.width, boxSize.height);
-    this.ctx.clip()
-    this.ctx.save()
+    const overflow = this.element.attrs.overflow || 'visible'
+    // 判断溢出模式
+    if (overflow !== 'visible') {
+      const boxSize = this.element.boxSize
+      const position = this.element.curPosition
+      this.ctx.beginPath();
+      this.ctx.rect(position.x, position.y, boxSize.width, boxSize.height);
+      this.ctx.clip()
+      // 判断如果overflow为滚动或者自动
+      if (overflow === 'scroll' || overflow === 'auto') {
+
+      }
+    }
+    // this.ctx.save()
+  }
+  /**
+   * 渲染子元素
+   */
+  renderChild() {
+    const element = this.element
+    // 判断是否存在子元素，遍历渲染
+    if (element.children && element.children.length) {
+      element.children.forEach(item => {
+        render(this.vm, item)
+      })
+    }
   }
   /**
    * 获取坐标
