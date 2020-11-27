@@ -25,7 +25,7 @@ export default class DIV extends EventTrigger {
     this.ctx.restore()
   }
   initEvent() {
-    const boxSize = this.element.realBoxSize || {}
+    const boxSize = this.element.boxSize || {}
     const curPosition = this.element.curPosition
     this.$on('touchmove', (e: TouchEvent, index: number) => {
       const touch = (e.touches[0] || {})
