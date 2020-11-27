@@ -79,6 +79,15 @@ export class VueElement {
       height
     }
   }
+  /**
+   * 真实盒子大小
+   */
+  get realBoxSize(): ISize {
+    if (this.parent && this.parent.attrs && this.parent.attrs.overflow && this.parent.attrs.overflow !== 'visible') {
+      return this.parent.realBoxSize
+    }
+    return this.boxSize
+  }
   /** 子盒子大小 */
   get childSize(): ISize {
     let width = 0

@@ -2,7 +2,7 @@
 import { initEvent } from "./lifeycle/event"
 import { initRender } from "./lifeycle/render"
 import { createElement, VueElement } from "./render/element"
-import { render } from './render/render'
+import { firstRender, render } from './render/render'
 /**
  * Vue类配置信息
  */
@@ -28,6 +28,6 @@ export default class Vue {
    */
   $mount() {
     // 逐帧请求渲染
-    window.requestAnimationFrame(render.bind(null, this, this.$element as VueElement))
+    window.requestAnimationFrame(firstRender.bind(null, this, this.$element as VueElement))
   }
 }

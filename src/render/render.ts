@@ -5,13 +5,17 @@ import * as componets from './components'
 import Vue from "../vue"
 const renderComponents: Record<string, any> = componets
 // 保存elements
-export let elements: any = []
+export let elements: any[] = []
 /**
  * 渲染方法
  * @param {VueElement} element 元素
  */
-export function render(vm: Vue, element: VueElement) {
+export function firstRender(vm: Vue, ele: VueElement) {
   elements = []
+  render(vm, ele)
+}
+export function render(vm: Vue, element: VueElement) {
+  // elements = []
   // 渲染组件
   componentsRender(vm, element)
 }
@@ -26,8 +30,8 @@ export function render(vm: Vue, element: VueElement) {
 // }
 function componentsRender(vm: Vue, element: VueElement) {
   const renderComponentInstance = getComponentInstance(vm, element)
-  renderComponentInstance.render()
   elements.push(renderComponentInstance)
+  renderComponentInstance.render()
 }
 /**
  * 获取元素实例

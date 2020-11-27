@@ -1,14 +1,16 @@
 // div组件
 import Vue from "../..";
+import { EventTrigger } from "../../common/event";
 import { VueElement } from "../element";
 import { render } from "../render";
 const imgCache: Record<string, HTMLImageElement> = {}
 /**
  * 渲染div组件
  */
-export default class DIV {
+export default class DIV extends EventTrigger {
   ctx: CanvasRenderingContext2D
   constructor(public element: VueElement, public vm: Vue) {
+    super()
     this.ctx = this.vm.$ctx
   }
   render() {
@@ -17,9 +19,31 @@ export default class DIV {
     this.drawColor()
     this.drawImage()
     this.parseOverflow()
+    this.initEvent()
     // 渲染子元素
     this.renderChild()
     this.ctx.restore()
+  }
+  initEvent() {
+    const boxSize = this.element.realBoxSize || {}
+    const curPosition = this.element.curPosition
+    this.$on('touchmove', (e: TouchEvent, index: number) => {
+      const touch = (e.touches[0] || {})
+      const position = {
+        x: touch.clientX * 2,
+        y: touch.clientY * 2
+      }
+      // console.log(this.element)
+      // 判断是否在点击区域内
+      if (position.x >= curPosition.x
+        && position.x <= curPosition.x + boxSize.width
+        && position.y >= curPosition.y
+        && position.y <= curPosition.y + boxSize.height) {
+        console.log(this.element.attrs, index)
+        return true
+      }
+      // console.log(position.x, position.y, curPosition.x, curPosition.y)
+    })
   }
   /**
    * 创建盒子方法
