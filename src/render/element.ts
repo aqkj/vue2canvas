@@ -81,12 +81,24 @@ export class VueElement {
   }
   /**
    * 真实盒子大小
+   * 用于识别带overflow的真实大小
    */
-  get realBoxSize(): ISize {
-    if (this.parent && this.parent.attrs && this.parent.attrs.overflow && this.parent.attrs.overflow !== 'visible') {
-      return this.parent.realBoxSize
+  get realBoxSize(): ISize & { hasOverflow: boolean } {
+    const boxSize = this.boxSize
+    const parent = this.parent
+    // 获取父级盒子的真实大小
+    const parentBoxSize = parent && parent.realBoxSize || boxSize
+    // 判断父级或者更深的父级是否存在overflow
+    let hasParentOverflow = (parentBoxSize as any).hasOverflow || parent && parent.attrs && parent.attrs.overflow && parent.attrs.overflow !== 'visible'
+    // 真实的盒子大小
+    let realSize: ISize = {
+      width: hasParentOverflow && parentBoxSize.width > boxSize.width ? boxSize.width : !hasParentOverflow ? boxSize.width : parentBoxSize.width,
+      height: hasParentOverflow && parentBoxSize.height > boxSize.height ? boxSize.height : !hasParentOverflow ? boxSize.height : parentBoxSize.height
     }
-    return this.boxSize
+    return {
+      ...realSize,
+      hasOverflow: hasParentOverflow
+    }
   }
   /** 子盒子大小 */
   get childSize(): ISize {
