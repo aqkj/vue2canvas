@@ -23,6 +23,14 @@ module.exports = (env, args) => {
     module: {
       rules: [
         {
+          test: /\.vue$/,
+          use: [
+            {
+              loader: require.resolve('./plugins/vue-loader')
+            }
+          ]
+        },
+        {
           test: /\.tsx?$/,
           use: [
             'ts-loader'
@@ -36,6 +44,14 @@ module.exports = (env, args) => {
               limit: 0
             }
           }]
+        },
+        {
+          test: /\.less$/,
+          use: [
+            'style-loader',
+            'css-loader',
+            'less-loader'
+          ]
         }
       ]
     },
@@ -51,7 +67,7 @@ module.exports = (env, args) => {
       hot: true,
       compress: true,
       progress: true,
-      open: true
+      open: false
     }
   }
   return config
