@@ -8,9 +8,7 @@ console.log(App)
 const app = new Vue({
   el: document.querySelector('#canvas'),
   data: {},
-  render(h) {
-    return h(App)
-  }
+  render: (App as any).template
   // render(h) {
   //   return h('div', {
   //     backgroundColor: 'pink',
