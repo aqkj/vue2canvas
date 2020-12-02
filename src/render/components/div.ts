@@ -9,9 +9,12 @@ const imgCache: Record<string, HTMLImageElement> = {}
  */
 export default class DIV extends EventTrigger {
   ctx: CanvasRenderingContext2D
+  styles: CSSStyleDeclaration
   constructor(public element: VueElement, public vm: Vue) {
     super()
     this.ctx = this.vm.$ctx
+    const attrs = this.element.attrs
+    this.styles = Object.assign({}, attrs.staticStyle, attrs.style) as CSSStyleDeclaration
   }
   render() {
     this.ctx.save()
@@ -39,7 +42,7 @@ export default class DIV extends EventTrigger {
         && position.x <= curPosition.x + boxSize.width
         && position.y >= curPosition.y
         && position.y <= curPosition.y + boxSize.height) {
-        console.log(this.element.attrs, index)
+        console.log(this.styles, index)
         return true
       }
       // console.log(position.x, position.y, curPosition.x, curPosition.y)
@@ -60,7 +63,7 @@ export default class DIV extends EventTrigger {
    * 颜色处理
    */
   drawColor() {
-    const backgroundColor = this.element.attrs.backgroundColor || ''
+    const backgroundColor = this.styles.backgroundColor || ''
     // 判断背景颜色是否存在
     if (backgroundColor) {
       const boxSize = this.element.boxSize || {}
@@ -75,7 +78,7 @@ export default class DIV extends EventTrigger {
    * 绘制图片
    */
   drawImage() {
-    const backgroundImage = this.element.attrs.backgroundImage || ''
+    const backgroundImage = this.styles.backgroundImage || ''
     // 判断背景图是否存在
     if (backgroundImage) {
       const boxSize = this.element.boxSize || {}
@@ -96,7 +99,7 @@ export default class DIV extends EventTrigger {
    * 溢出处理
    */
   parseOverflow() {
-    const overflow = this.element.attrs.overflow || 'visible'
+    const overflow = this.styles.overflow || 'visible'
     // 判断溢出模式
     if (overflow !== 'visible') {
       const boxSize = this.element.boxSize

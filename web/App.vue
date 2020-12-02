@@ -1,12 +1,19 @@
 <template>
-  <div class="app">
+  <div class="app" style="color: #000;background-color: #ddd;" :style="style">
     <div class="a">123</div>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'App'
+  name: 'App',
+  data() {
+    return {
+      style: {
+        color: 'red'
+      }
+    }
+  }
 }
 </script>
 

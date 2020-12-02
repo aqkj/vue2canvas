@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 exports.__esModule = true;
 var loader_utils_1 = require("loader-utils");
 var vue_template_compiler_1 = require("vue-template-compiler");
+var complier = require('vue-template-es2015-compiler');
 var querystring_1 = __importDefault(require("querystring"));
 /**
  * 导出vueloader
@@ -34,7 +35,7 @@ module.exports = function VueLoader(content, map) {
         imports.push("import _script from '" + resource + "." + (descriptor.script.lang || 'js') + "!=!" + require.resolve("" + module.filename) + "!" + resource + "?type=script';export const script = _script;");
     }
     if (descriptor.template) {
-        imports.push("import _template from '" + resource + "?type=template';export const template = _template;");
+        imports.push("import _render from '" + resource + "?type=template';export const render = _render;");
     }
     var code = imports.join('\n') + "export const component = { file: '" + this.resourcePath + "' }";
     return code;
@@ -66,8 +67,7 @@ function converCodeFromType(_a) {
     }
     else if (type === 'template' && descriptor.template) {
         var _c = vue_template_compiler_1.compile(descriptor.template.content), staticRenderFns = _c.staticRenderFns, render = _c.render;
-        // console.log(data)
-        this.callback(null, "export default render; function _m(index) {const staticRenderFns = " + JSON.stringify(staticRenderFns).replace(/with\(this\)/, '') + "; return staticRenderFns[index];} function render(h){ const _c = h; const _v = (str) => str; const str = (function(){" + render.replace(/with\(this\)/, '') + "})(); return str}", descriptor.template.map);
+        this.callback(null, "export default render; " + complier("function render(_h,_vm) {" + render + "}"), descriptor.template.map);
         return;
     }
     return;

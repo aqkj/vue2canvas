@@ -14,12 +14,16 @@ interface IOptions {
   render?: (h?: any) => void
 }
 export default class Vue {
+  _self: Vue
+  _v: any
   $render: any
   $element?: VueElement
+  $createElement: any
   $ctx: CanvasRenderingContext2D
   constructor(public $options: IOptions) {
     if (!this.$options.el) console.error('[vue] el是必须的')
     this.$ctx = (this.$options.el as HTMLCanvasElement).getContext('2d') as CanvasRenderingContext2D
+    this._self = this
     initEvent(this)
     initRender(this)
   }

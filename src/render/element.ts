@@ -26,6 +26,8 @@ interface IAttrs {
   overflow: 'auto' | 'visible' | 'hidden' | 'scroll'
   /** 背景图片 */
   backgroundImage: string
+  style: CSSStyleDeclaration
+  staticStyle: CSSStyleDeclaration
 }
 interface IPosition {
   x: number
@@ -45,6 +47,8 @@ export class VueElement {
   type: string
   // 属性对象
   attrs: IAttrs
+  // 属性样式
+  styles: CSSStyleDeclaration
   /** 子元素 */
   children: any[] = []
   /** 父元素 */
@@ -134,6 +138,12 @@ export class VueElement {
   constructor(options: IOptions) {
     this.type = options.type
     this.attrs = options.attrs || {}
+    const styles = Object.assign({}, this.attrs.staticStyle, this.attrs.style)
+    this.styles = {} as any
+    Object.keys(styles).forEach(key => {
+      const name = key.replace(/(\-\w+)/g, a => a.slice(1).toUpperCase())
+      ;(this.styles as any)[name] = (styles as any)[key]
+    })
     linkParent(this, options.children)
     makeRender(this)
   }
@@ -195,4 +205,11 @@ export function createElement(type: string, attrs: any, children?: any) {
     attrs,
     children
   })
+}
+/**
+ * 创建文本元素
+ * @param text 文本
+ */
+export function createTextElement(text: any) {
+  return createElement('text', text)
 }

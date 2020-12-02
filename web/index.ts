@@ -4,10 +4,8 @@
  */
 import Vue from "../src"
 import * as App from './App.vue'
-console.log(App)
 const app = new Vue({
   el: document.querySelector('#canvas'),
-  data: {},
   render: (App as any).template
   // render(h) {
   //   return h('div', {
@@ -80,4 +78,5 @@ const app = new Vue({
   // }
 })
 app.$mount()
-console.log('网页逻辑', app.$mount())
+// console.log('网页逻辑', app.$mount())
+console.log(app)

@@ -3,7 +3,8 @@
  */
 import webpack from 'webpack'
 import { stringifyRequest, getRemainingRequest } from 'loader-utils'
-import { parseComponent, SFCDescriptor, compile } from 'vue-template-compiler'
+import { parseComponent, SFCDescriptor, compile, compileToFunctions } from 'vue-template-compiler'
+const complier = require('vue-template-es2015-compiler')
 import qs from 'querystring'
 /**
  * 导出vueloader
@@ -33,7 +34,7 @@ module.exports = function VueLoader(this: webpack.loader.LoaderContext, content:
         imports.push(`import _script from '${resource}.${descriptor.script.lang || 'js'}!=!${require.resolve(`${module.filename}`)}!${resource}?type=script';export const script = _script;`)
     }
     if (descriptor.template) {
-        imports.push(`import _template from '${resource}?type=template';export const template = _template;`)
+        imports.push(`import _render from '${resource}?type=template';export const render = _render;`)
     }
     let code: string = `${imports.join('\n')}export const component = { file: '${this.resourcePath}' }`
     return code
@@ -68,9 +69,9 @@ function converCodeFromType(this: webpack.loader.LoaderContext, {
         this.callback(null, content)
         return
     } else if (type === 'template' && descriptor.template) {
+
         const { staticRenderFns, render } = compile(descriptor.template.content)
-        // console.log(data)
-        this.callback(null, `export default render; function _m(index) {const staticRenderFns = ${JSON.stringify(staticRenderFns).replace(/with\(this\)/, '')}; return staticRenderFns[index];} function render(h){ const _c = h; const _v = (str) => str; const str = (function(){${render.replace(/with\(this\)/, '')}})(); return str}`, (descriptor.template as any).map)
+        this.callback(null, `export default render; ${complier(`function render(_h,_vm) {${render}}`)}`, (descriptor.template as any).map)
         return
     }
     return
