@@ -6,7 +6,7 @@ import Vue from "../src"
 import * as App from './App.vue'
 const app = new Vue({
   el: document.querySelector('#canvas'),
-  render: (App as any).template
+  render: (App as any).render
   // render(h) {
   //   return h('div', {
   //     backgroundColor: 'pink',

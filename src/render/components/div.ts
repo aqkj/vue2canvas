@@ -14,7 +14,8 @@ export default class DIV extends EventTrigger {
     super()
     this.ctx = this.vm.$ctx
     const attrs = this.element.attrs
-    this.styles = Object.assign({}, attrs.staticStyle, attrs.style) as CSSStyleDeclaration
+    this.styles = this.element.styles
+    // console.log(this.styles)
   }
   render() {
     this.ctx.save()
@@ -27,6 +28,9 @@ export default class DIV extends EventTrigger {
     this.renderChild()
     this.ctx.restore()
   }
+  /**
+   * 初始化事件
+   */
   initEvent() {
     const boxSize = this.element.realBoxSize || {}
     const curPosition = this.element.curPosition
@@ -68,6 +72,7 @@ export default class DIV extends EventTrigger {
     if (backgroundColor) {
       const boxSize = this.element.boxSize || {}
       const position = this.element.curPosition
+      // console.log(boxSize, position)
       this.ctx.beginPath();
       this.ctx.rect(position.x, position.y, boxSize.width, boxSize.height)
       this.ctx.fillStyle = backgroundColor;

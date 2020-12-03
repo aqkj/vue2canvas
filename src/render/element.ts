@@ -1,6 +1,7 @@
 // 元素操作
 
 import Vue from ".."
+import { parseUnit } from "../common/utils"
 
 /**
  * 元素接口
@@ -69,7 +70,10 @@ export class VueElement {
   value: string = ''
   /** 盒子大小 */
   get boxSize(): ISize {
-    let { width, height, display } = this.attrs
+    let { width, height, display } = this.styles as any
+    width = parseUnit(width)
+    height = parseUnit(height)
+    // console.log(height)
     if (!width) {
       if (display === 'inline' || display === 'inline-block') {
         width = this.childSize.width
@@ -141,7 +145,7 @@ export class VueElement {
     const styles = Object.assign({}, this.attrs.staticStyle, this.attrs.style)
     this.styles = {} as any
     Object.keys(styles).forEach(key => {
-      const name = key.replace(/(\-\w+)/g, a => a.slice(1).toUpperCase())
+      const name = key.replace(/(\-\w)/g, a => a.slice(1).toUpperCase())
       ;(this.styles as any)[name] = (styles as any)[key]
     })
     linkParent(this, options.children)
