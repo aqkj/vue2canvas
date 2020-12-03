@@ -1,5 +1,5 @@
 <template>
-  <div class="app" style="color: #000;background-color: #ddd;height: 200px" :style="style">
+  <div class="app" :id="'abc'" :class="{ a: true, b: false }" :style="style">
     <div class="a" style="background-color: red; height: 100px;">123</div>
   </div>
 </template>
@@ -20,5 +20,13 @@ export default {
 <style lang="less">
 .app{
   color: #fff;
+}
+</style>
+<style lang="less">
+.app{
+  background-color: blue;
+  height: 200px;
+  width: 200px;
+  overflow: hidden;
 }
 </style>

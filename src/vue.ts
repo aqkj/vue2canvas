@@ -31,7 +31,15 @@ export default class Vue {
    * 渲染
    */
   $mount() {
+    const render = () => {
+      this.$element = this.$render(createElement)
+      this.$element && (this.$element.vm = this)
+      // 清理渲染
+      this.$ctx.clearRect(0, 0, 1000, 1000)
+      firstRender(this, this.$element as VueElement)
+      window.requestAnimationFrame(render)
+    }
     // 逐帧请求渲染
-    window.requestAnimationFrame(firstRender.bind(null, this, this.$element as VueElement))
+    window.requestAnimationFrame(render)
   }
 }

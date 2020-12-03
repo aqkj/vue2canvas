@@ -9,6 +9,4 @@ export function initRender(vm: Vue) {
   vm.$render = vm.$options.render || function() {}
   vm.$createElement = createElement
   vm._v = createTextElement
-  vm.$element = vm.$render(createElement)
-  vm.$element && (vm.$element.vm = vm)
 }

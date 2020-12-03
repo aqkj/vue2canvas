@@ -7,6 +7,7 @@ var loader_utils_1 = require("loader-utils");
 var vue_template_compiler_1 = require("vue-template-compiler");
 var complier = require('vue-template-es2015-compiler');
 var querystring_1 = __importDefault(require("querystring"));
+var hot_1 = require("./hot");
 /**
  * 导出vueloader
  */
@@ -37,7 +38,7 @@ module.exports = function VueLoader(content, map) {
     if (descriptor.template) {
         imports.push("import _render from '" + resource + "?type=template';export const render = _render;");
     }
-    var code = imports.join('\n') + "export const component = { file: '" + this.resourcePath + "' }";
+    var code = hot_1.hot(imports.join('\n') + "export const component = { file: '" + this.resourcePath + "' }");
     return code;
 };
 function pitch(remainingRequest, precedingRequest, data) {

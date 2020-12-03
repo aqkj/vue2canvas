@@ -1,7 +1,8 @@
 // 元素操作
 
 import Vue from ".."
-import { parseUnit } from "../common/utils"
+import { forEach, parseUnit } from "../common/utils"
+import { getStyles } from './style'
 
 /**
  * 元素接口
@@ -29,6 +30,12 @@ interface IAttrs {
   backgroundImage: string
   style: CSSStyleDeclaration
   staticStyle: CSSStyleDeclaration
+  /** 静态class */
+  staticClass: string
+  /** class名 */
+  class: string
+  /** 属性列表 */
+  attrs: Record<string, any>
 }
 interface IPosition {
   x: number
@@ -50,6 +57,8 @@ export class VueElement {
   attrs: IAttrs
   // 属性样式
   styles: CSSStyleDeclaration
+  // 真实clas
+  classes: string[] = []
   /** 子元素 */
   children: any[] = []
   /** 父元素 */
@@ -68,6 +77,10 @@ export class VueElement {
     y: 0
   }
   value: string = ''
+  // 获取id
+  get id(): string {
+    return this.attrs && this.attrs.attrs && this.attrs.attrs.id
+  }
   /** 盒子大小 */
   get boxSize(): ISize {
     let { width, height, display } = this.styles as any
@@ -142,15 +155,34 @@ export class VueElement {
   constructor(options: IOptions) {
     this.type = options.type
     this.attrs = options.attrs || {}
-    const styles = Object.assign({}, this.attrs.staticStyle, this.attrs.style)
+    this.styles = {} as any
+    mergeClass(this)
+    linkParent(this, options.children)
+    makeRender(this)
+    getStyles(this)
+    const styles = Object.assign({}, this.styles, this.attrs.staticStyle, this.attrs.style)
     this.styles = {} as any
     Object.keys(styles).forEach(key => {
       const name = key.replace(/(\-\w)/g, a => a.slice(1).toUpperCase())
       ;(this.styles as any)[name] = (styles as any)[key]
     })
-    linkParent(this, options.children)
-    makeRender(this)
   }
+  /**
+   * 查找className
+   */
+  hasClass(className: string): boolean {
+    return this.classes.indexOf(className) !== -1
+  }
+}
+/**
+ * 处理class
+ * @param el vue元素
+ */
+function mergeClass(el: VueElement) {
+  const attrs: IAttrs = el.attrs
+  const classes: string[] = Object.keys(attrs.class || {}).filter(className => (attrs.class as any)[className])
+  const staticClasses: string[] = attrs.staticClass && attrs.staticClass.split(' ') || []
+  el.classes = classes.concat(staticClasses)
 }
 /**
  * 父子联系

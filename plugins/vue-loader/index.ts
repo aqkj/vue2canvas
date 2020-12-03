@@ -6,6 +6,7 @@ import { stringifyRequest, getRemainingRequest } from 'loader-utils'
 import { parseComponent, SFCDescriptor, compile, compileToFunctions } from 'vue-template-compiler'
 const complier = require('vue-template-es2015-compiler')
 import qs from 'querystring'
+import { hot } from './hot'
 /**
  * 导出vueloader
  */
@@ -36,7 +37,7 @@ module.exports = function VueLoader(this: webpack.loader.LoaderContext, content:
     if (descriptor.template) {
         imports.push(`import _render from '${resource}?type=template';export const render = _render;`)
     }
-    let code: string = `${imports.join('\n')}export const component = { file: '${this.resourcePath}' }`
+    let code: string = hot(`${imports.join('\n')}export const component = { file: '${this.resourcePath}' }`)
     return code
 }
 function pitch(this: webpack.loader.LoaderContext, remainingRequest: any, precedingRequest: any, data: any) {

@@ -20,3 +20,13 @@ export function parseUnit(str: string) {
     return number
   } else return number
 }
+// 数组原型
+const arrayProto = Array.prototype
+/**
+ * 遍历
+ * @param list 列表
+ * @param callback 回调
+ */
+export function forEach(list: any, callback: any) {
+  arrayProto.forEach.call(list, callback)
+}
