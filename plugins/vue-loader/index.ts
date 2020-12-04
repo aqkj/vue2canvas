@@ -30,14 +30,14 @@ module.exports = function VueLoader(this: webpack.loader.LoaderContext, content:
             imports.push(`import _style${index} from '${resource}.${style.lang || 'css'}!=!${require.resolve(`${module.filename}`)}!${resource}?type=style&index=${index}';try{styles.push(_styles${index});}catch(e){}`)
         })
         imports.push(`export const style = styles`);
-    }
+    } else imports.push(`const styles = []`)
     if (descriptor.script) {
-        imports.push(`import _script from '${resource}.${descriptor.script.lang || 'js'}!=!${require.resolve(`${module.filename}`)}!${resource}?type=script';export const script = _script;`)
-    }
+        imports.push(`import script from '${resource}.${descriptor.script.lang || 'js'}!=!${require.resolve(`${module.filename}`)}!${resource}?type=script';`)
+    } else imports.push(`const script = {}`)
     if (descriptor.template) {
-        imports.push(`import _render from '${resource}?type=template';export const render = _render;`)
-    }
-    let code: string = hot(`${imports.join('\n')}export const component = { file: '${this.resourcePath}' }`)
+        imports.push(`import render from '${resource}?type=template';`)
+    } else imports.push(`const render = () => {}`)
+    let code: string = hot(`${imports.join('\n')}export default { file: '${this.resourcePath}', ...(script || {}), render, styles }`)
     return code
 }
 function pitch(this: webpack.loader.LoaderContext, remainingRequest: any, precedingRequest: any, data: any) {

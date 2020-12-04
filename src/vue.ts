@@ -1,5 +1,6 @@
 // vue
 import { initCanvas } from "./lifeycle/canvas"
+import { initComponents } from "./lifeycle/component"
 import { initEvent } from "./lifeycle/event"
 import { initRender } from "./lifeycle/render"
 import { createElement, VueElement } from "./render/element"
@@ -14,6 +15,8 @@ interface IOptions {
   data?: Record<string, any>
   /** 是否为组件 */
   isComp?: boolean
+  /** 组件 */
+  components?: Record<string, IOptions> | IOptions[]
   /** 渲染方法 */
   render?: (h?: any) => void
 }
@@ -27,6 +30,8 @@ export default class Vue {
   $ctx?: CanvasRenderingContext2D
   $root?: Vue
   $parent?: Vue
+  $children: Vue[] = []
+  $components: Record<string, any> = {}
   name?: string
   constructor(public $options: IOptions) {
     if (!this.$options.el && !this.$options.isComp) console.error('[vue] el是必须的')
@@ -34,6 +39,7 @@ export default class Vue {
     this.uid = vmCount++
     initEvent(this)
     initRender(this)
+    initComponents(this)
   }
   /**
    * 渲染
@@ -46,7 +52,8 @@ export default class Vue {
      * 渲染循环
      */
     const renderLoop = () => {
-      this.$element = this.$render(createElement)
+      this.$children = []
+      this.$element = this.$render(createElement.bind(this))
       this.$element && (this.$element.vm = this)
       if (this.$ctx) {
         // 清理渲染
@@ -55,15 +62,17 @@ export default class Vue {
       // 第一次渲染
       firstRender(this, this.$element as VueElement)
       // 渲染循环
-      window.requestAnimationFrame(renderLoop)
+      if (!this.$options.isComp) window.requestAnimationFrame(renderLoop)
     }
-    window.requestAnimationFrame(renderLoop)
+    // 非组件才会调
+    if (!this.$options.isComp) window.requestAnimationFrame(renderLoop)
+    else renderLoop()
   }
   /**
    * 继承
    */
   extend(options: IOptions) {
-    return VueComp.bind(options)
+    return VueComp.bind(null, options, this)
   }
   /**
    * 注册组件
@@ -84,6 +93,8 @@ class VueComp extends Vue {
     super(options)
     // 设置父实例
     this.$parent = parent
+    // 关联
+    parent.$children.push(this)
     // 挂载
     this.$mount()
   }

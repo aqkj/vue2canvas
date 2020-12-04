@@ -1,12 +1,17 @@
 <template>
   <div class="app" :id="'abc'" :class="{ a: true, b: false }" :style="style">
     <div class="a" style="background-color: red; height: 100px;">123</div>
+    <Comp />
   </div>
 </template>
 
 <script>
+import Comp from './Comp.vue'
 export default {
   name: 'App',
+  components: {
+    Comp
+  },
   data() {
     return {
       style: {

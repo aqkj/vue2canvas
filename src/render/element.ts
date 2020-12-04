@@ -13,6 +13,7 @@ interface IOptions {
   // 子元素数组
   children?: any
   attrs: any
+  vm: Vue
 }
 /** 属性接口 */
 interface IAttrs {
@@ -51,6 +52,8 @@ interface ISize {
 export class VueElement {
   /** vue实例 */
   vm?: Vue
+  /** 构造函数 */
+  Ctor?: any
   /** 类型 */
   type: string
   // 属性对象
@@ -152,12 +155,17 @@ export class VueElement {
     }
     return position
   }
+  /**
+   * 构造函数
+   * @param options 配置
+   */
   constructor(options: IOptions) {
+    this.vm = options.vm
     this.type = options.type
     this.attrs = options.attrs || {}
     this.styles = {} as any
     mergeClass(this)
-    linkParent(this, options.children)
+    linkParent(this, options.children || [])
     makeRender(this)
     getStyles(this)
     const styles = Object.assign({}, this.styles, this.attrs.staticStyle, this.attrs.style)
@@ -230,22 +238,30 @@ export function createElement(type: string, children: any): any
 /**
  * 创建元素方法
  */
-export function createElement(type: string | Vue, attrs: any, children?: any) {
+export function createElement(this: Vue, type: string, attrs: any, children?: any) {
   if (!Array.isArray(attrs) && typeof attrs === 'object') {
   } else {
     children = attrs
     attrs = {}
   }
-  let Ctor = null
-  if (type instanceof Vue) {
-    const vmComp = type
-    type = vmComp.name || `vue-component-name`
+  if (typeof type === 'object') {
+    const comp = type as any
+    // 组件构造函数
+    const CompCtor = this.extend(comp)
+    // // 设置名称
+    // this.type = comp.name || `vue-component-name`
+    // // 设置构造器
+    // this.Ctor = CompCtor
+    const vmComp = new CompCtor()
+    return vmComp.$element
+  } else {
+    return new VueElement({
+      type,
+      attrs,
+      children,
+      vm: this
+    })
   }
-  return new VueElement({
-    type,
-    attrs,
-    children
-  })
 }
 /**
  * 创建文本元素

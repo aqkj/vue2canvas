@@ -32,13 +32,19 @@ module.exports = function VueLoader(content, map) {
         });
         imports.push("export const style = styles");
     }
+    else
+        imports.push("const styles = []");
     if (descriptor.script) {
-        imports.push("import _script from '" + resource + "." + (descriptor.script.lang || 'js') + "!=!" + require.resolve("" + module.filename) + "!" + resource + "?type=script';export const script = _script;");
+        imports.push("import script from '" + resource + "." + (descriptor.script.lang || 'js') + "!=!" + require.resolve("" + module.filename) + "!" + resource + "?type=script';");
     }
+    else
+        imports.push("const script = {}");
     if (descriptor.template) {
-        imports.push("import _render from '" + resource + "?type=template';export const render = _render;");
+        imports.push("import render from '" + resource + "?type=template';");
     }
-    var code = hot_1.hot(imports.join('\n') + "export const component = { file: '" + this.resourcePath + "' }");
+    else
+        imports.push("const render = () => {}");
+    var code = hot_1.hot(imports.join('\n') + "export default { file: '" + this.resourcePath + "', ...(script || {}), render, styles }");
     return code;
 };
 function pitch(remainingRequest, precedingRequest, data) {

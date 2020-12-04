@@ -12,6 +12,7 @@ export let elements: any[] = []
  */
 export function firstRender(vm: Vue, ele: VueElement) {
   elements = []
+  // vm.$children = []
   render(vm, ele)
 }
 export function render(vm: Vue, element: VueElement) {
@@ -30,19 +31,25 @@ export function render(vm: Vue, element: VueElement) {
 // }
 function componentsRender(vm: Vue, element: VueElement) {
   const renderComponentInstance = getComponentInstance(vm, element)
-  elements.push(renderComponentInstance)
-  renderComponentInstance.render()
+  if (renderComponentInstance) {
+    elements.push(renderComponentInstance)
+    renderComponentInstance.render()
+  }
 }
 /**
  * 获取元素实例
  * @param element 
  */
 function getComponentInstance(vm: Vue, element: VueElement) {
-  if (typeof element.type === 'string') {
-    const renderComponentsFunc = renderComponents[element.type]
-    if (renderComponentsFunc) return new renderComponentsFunc(element, vm)
-    else return new renderComponents['div'](element, vm)
-  } else if (typeof element.type === 'object') { // 如果类型是对象
-
-  }
+  // 判断是否存在构造函数
+  // if (!element.Ctor) {
+  const renderComponentsFunc = renderComponents[element.type]
+  if (renderComponentsFunc) return new renderComponentsFunc(element, vm)
+  else return new renderComponents['div'](element, vm)
+  // } else { // 如果类型是对象
+  //   const Ctor = element.Ctor
+  //   const vmComp = new Ctor() as Vue
+  //   vm.$children.push(vmComp)
+  //   vmComp.$mount()
+  // }
 }
