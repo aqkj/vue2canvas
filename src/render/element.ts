@@ -110,7 +110,7 @@ export class VueElement {
     // 获取父级盒子的真实大小
     const parentBoxSize = parent && parent.realBoxSize || boxSize
     // 判断父级或者更深的父级是否存在overflow
-    let hasParentOverflow = (parentBoxSize as any).hasOverflow || parent && parent.attrs && parent.attrs.overflow && parent.attrs.overflow !== 'visible'
+    let hasParentOverflow = (parentBoxSize as any).hasOverflow || parent && parent.styles && parent.styles.overflow && parent.styles.overflow !== 'visible'
     // 真实的盒子大小
     let realSize: ISize = {
       width: hasParentOverflow && parentBoxSize.width > boxSize.width ? boxSize.width : !hasParentOverflow ? boxSize.width : parentBoxSize.width,
@@ -230,11 +230,16 @@ export function createElement(type: string, children: any): any
 /**
  * 创建元素方法
  */
-export function createElement(type: string, attrs: any, children?: any) {
+export function createElement(type: string | Vue, attrs: any, children?: any) {
   if (!Array.isArray(attrs) && typeof attrs === 'object') {
   } else {
     children = attrs
     attrs = {}
+  }
+  let Ctor = null
+  if (type instanceof Vue) {
+    const vmComp = type
+    type = vmComp.name || `vue-component-name`
   }
   return new VueElement({
     type,

@@ -12,7 +12,7 @@ export default class DIV extends EventTrigger {
   styles: CSSStyleDeclaration
   constructor(public element: VueElement, public vm: Vue) {
     super()
-    this.ctx = this.vm.$ctx
+    this.ctx = this.vm.$ctx as CanvasRenderingContext2D
     const attrs = this.element.attrs
     this.styles = this.element.styles
     // console.log(this.styles)

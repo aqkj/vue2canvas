@@ -38,7 +38,11 @@ function componentsRender(vm: Vue, element: VueElement) {
  * @param element 
  */
 function getComponentInstance(vm: Vue, element: VueElement) {
-  const renderComponentsFunc = renderComponents[element.type]
-  if (renderComponentsFunc) return new renderComponentsFunc(element, vm)
-  else return new renderComponents['div'](element, vm)
+  if (typeof element.type === 'string') {
+    const renderComponentsFunc = renderComponents[element.type]
+    if (renderComponentsFunc) return new renderComponentsFunc(element, vm)
+    else return new renderComponents['div'](element, vm)
+  } else if (typeof element.type === 'object') { // 如果类型是对象
+
+  }
 }
