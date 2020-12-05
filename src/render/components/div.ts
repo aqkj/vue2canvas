@@ -1,7 +1,7 @@
 // div组件
 import Vue from "../..";
 import { EventTrigger } from "../../common/event";
-import { VueElement } from "../element";
+import { RealElement } from "../element";
 import { render } from "../render";
 const imgCache: Record<string, HTMLImageElement> = {}
 /**
@@ -10,7 +10,7 @@ const imgCache: Record<string, HTMLImageElement> = {}
 export default class DIV extends EventTrigger {
   ctx: CanvasRenderingContext2D
   styles: CSSStyleDeclaration
-  constructor(public element: VueElement, public vm: Vue) {
+  constructor(public element: RealElement, public vm: Vue) {
     super()
     this.ctx = this.vm.$ctx as CanvasRenderingContext2D
     const attrs = this.element.attrs
@@ -150,7 +150,7 @@ export default class DIV extends EventTrigger {
   //   return position
   // }
 }
-// export default function DIV(element: VueElement, vm: Vue) {
+// export default function DIV(element: RealElement, vm: Vue) {
 //   createBox(element, vm)
 //   vm.$ctx.stroke()
 // }

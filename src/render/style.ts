@@ -1,7 +1,7 @@
 // 样式处理
 
 import { forEach } from "../common/utils";
-import { VueElement } from "./element";
+import { RealElement } from "./element";
 
 
 export const domClass: Record<string, any> = Object.create({})
@@ -9,7 +9,7 @@ export const domClass: Record<string, any> = Object.create({})
  * 获取样式
  * @param el vue元素对象
  */
-export function getStyles(el: VueElement) {
+export function getStyles(el: RealElement) {
   const styles = document.styleSheets;
   forEach(styles, (style: any, index: number) => {
     let rules: any[] = []
@@ -44,7 +44,7 @@ export function getStyles(el: VueElement) {
     //     const isHasClass = el.hasClass(lastSelector)
     //   }
     // }
-    let element: VueElement | undefined = el
+    let element: RealElement | undefined = el
     const canMerge: boolean = selectorArr.every((selector: string, index: number) => {
       // 判断是否是类选择器
       const isClassSelector: boolean = !!selector.match(/\./)

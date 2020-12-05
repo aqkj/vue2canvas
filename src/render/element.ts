@@ -2,6 +2,7 @@
 
 import Vue from ".."
 import { forEach, parseUnit } from "../common/utils"
+import { renderComponentNames } from "./render"
 import { getStyles } from './style'
 
 /**
@@ -49,7 +50,7 @@ interface ISize {
 /**
  * Vue元素
  */
-export class VueElement {
+export class RealElement {
   /** vue实例 */
   vm?: Vue
   /** 构造函数 */
@@ -65,13 +66,13 @@ export class VueElement {
   /** 子元素 */
   children: any[] = []
   /** 父元素 */
-  parent?: VueElement
+  parent?: RealElement
   /** 兄弟元素 */
-  sibling?: VueElement[]
+  sibling?: RealElement[]
   /** 上一个兄弟 */
-  prevSibling?: VueElement
+  prevSibling?: RealElement
   /** 下一个兄弟 */
-  nextSibling?: VueElement
+  nextSibling?: RealElement
   /**
    * 元素坐标
    */
@@ -128,7 +129,7 @@ export class VueElement {
   get childSize(): ISize {
     let width = 0
     let height = 0
-    this.children.forEach((item: VueElement) => {
+    this.children.forEach((item: RealElement) => {
       width += item.boxSize.width || 0
       height += item.boxSize.height || 0
     })
@@ -186,7 +187,7 @@ export class VueElement {
  * 处理class
  * @param el vue元素
  */
-function mergeClass(el: VueElement) {
+function mergeClass(el: RealElement) {
   const attrs: IAttrs = el.attrs
   const classes: string[] = Object.keys(attrs.class || {}).filter(className => (attrs.class as any)[className])
   const staticClasses: string[] = attrs.staticClass && attrs.staticClass.split(' ') || []
@@ -197,7 +198,7 @@ function mergeClass(el: VueElement) {
  * @param parent 父
  * @param children 子
  */
-function linkParent(parent: VueElement, children: any) {
+function linkParent(parent: RealElement, children: any) {
   children = [].concat(children)
   // 文本
   if (parent.type === 'text') {
@@ -207,7 +208,7 @@ function linkParent(parent: VueElement, children: any) {
     // 父子关系关联
     parent.children = children.map((item: any, index: number) => {
       // 字符串
-      if (!(item instanceof VueElement)) {
+      if (!(item instanceof RealElement)) {
         item = createElement('text', item)
       }
       item.parent = parent
@@ -226,7 +227,7 @@ function linkParent(parent: VueElement, children: any) {
  * 创建渲染方法
  * @param vm 
  */
-function makeRender(vm: VueElement) {
+function makeRender(vm: RealElement) {
 
 }
 /**
@@ -255,7 +256,14 @@ export function createElement(this: Vue, type: string, attrs: any, children?: an
     const vmComp = new CompCtor()
     return vmComp.$element
   } else {
-    return new VueElement({
+    // 判断是否不为原生组件
+    if (!renderComponentNames.includes(type)) {
+      console.log(type)
+      const CompCtor = this.$components[type]
+      const vmComp = new CompCtor()
+      return vmComp.$element
+    }
+    return new RealElement({
       type,
       attrs,
       children,

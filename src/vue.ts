@@ -3,7 +3,7 @@ import { initCanvas } from "./lifeycle/canvas"
 import { initComponents } from "./lifeycle/component"
 import { initEvent } from "./lifeycle/event"
 import { initRender } from "./lifeycle/render"
-import { createElement, VueElement } from "./render/element"
+import { createElement, RealElement } from "./render/element"
 import { firstRender, render } from './render/render'
 let vmCount = 0
 /**
@@ -25,7 +25,7 @@ export default class Vue {
   _v: any
   uid: number
   $render: any
-  $element?: VueElement
+  $element?: RealElement
   $createElement: any
   $ctx?: CanvasRenderingContext2D
   $root?: Vue
@@ -60,7 +60,7 @@ export default class Vue {
         this.$ctx.clearRect(0, 0, 1000, 1000)
       }
       // 第一次渲染
-      firstRender(this, this.$element as VueElement)
+      firstRender(this, this.$element as RealElement)
       // 渲染循环
       if (!this.$options.isComp) window.requestAnimationFrame(renderLoop)
     }
