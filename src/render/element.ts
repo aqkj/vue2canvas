@@ -258,10 +258,12 @@ export function createElement(this: Vue, type: string, attrs: any, children?: an
   } else {
     // 判断是否不为原生组件
     if (!renderComponentNames.includes(type)) {
-      console.log(type)
+      // console.log(type)
       const CompCtor = this.$components[type]
-      const vmComp = new CompCtor()
-      return vmComp.$element
+      if (CompCtor) {
+        const vmComp = new CompCtor()
+        return vmComp.$element
+      }
     }
     return new RealElement({
       type,

@@ -7,6 +7,6 @@ import { createElement, createTextElement } from "../render/element";
  */
 export function initRender(vm: Vue) {
   vm.$render = vm.$options.render || function() {}
-  vm.$createElement = createElement
-  vm._v = createTextElement
+  vm.$createElement = createElement.bind(vm)
+  vm._v = createTextElement.bind(vm)
 }
