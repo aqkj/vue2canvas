@@ -4,7 +4,8 @@ import Vue from ".."
 import { forEach, parseUnit } from "../common/utils"
 import { renderComponentNames } from "./render"
 import { getStyles } from './style'
-
+// 可继承的样式
+export const inheritStyles: string[] = ['fontSize', 'color', 'fontFamily']
 /**
  * 元素接口
  */
@@ -28,6 +29,8 @@ interface IAttrs {
   display: 'block' | 'inline' | 'inline-block' | 'none' | 'flex'
   /** 溢出处理 */
   overflow: 'auto' | 'visible' | 'hidden' | 'scroll'
+  // 内容字符串
+  content: string
   /** 背景图片 */
   backgroundImage: string
   style: CSSStyleDeclaration
@@ -51,6 +54,8 @@ interface ISize {
  * Vue元素
  */
 export class RealElement {
+  /** 配置项 */
+  $options: IOptions
   /** vue实例 */
   vm?: Vue
   /** 构造函数 */
@@ -157,11 +162,32 @@ export class RealElement {
     return position
   }
   /**
+   * 继承的样式
+   */
+  get extendStyles(): CSSStyleDeclaration {
+    // 判断下父
+    if (this.parent) {
+      let el = this.parent
+      const _extendStyles: Record<string, any> = {}
+      while (el) {
+        // const styles = el.styles
+        inheritStyles.forEach(styleName => {
+          if (!_extendStyles[styleName]) _extendStyles[styleName] = (el.styles as Record<string, any>)[styleName]
+        })
+        el = el.parent as RealElement
+      }
+      return _extendStyles as CSSStyleDeclaration
+    } else {
+      return {} as CSSStyleDeclaration
+    }
+  }
+  /**
    * 构造函数
    * @param options 配置
    */
   constructor(options: IOptions) {
     this.vm = options.vm
+    this.$options = options
     this.type = options.type
     this.attrs = options.attrs || {}
     this.styles = {} as any
@@ -209,7 +235,7 @@ function linkParent(parent: RealElement, children: any) {
     parent.children = children.map((item: any, index: number) => {
       // 字符串
       if (!(item instanceof RealElement)) {
-        item = createElement('text', item)
+        item = createElement.call(parent.vm as Vue, 'text', item)
       }
       item.parent = parent
       const sibling = children.slice()
@@ -230,16 +256,16 @@ function linkParent(parent: RealElement, children: any) {
 function makeRender(vm: RealElement) {
 
 }
+// /**
+//  * 创建元素方法
+//  * @param type 元素类型
+//  * @param children 属性列表
+//  */
+// export function createElement(this: Vue, type: string, children: any): any
 /**
  * 创建元素方法
- * @param type 元素类型
- * @param children 属性列表
  */
-export function createElement(type: string, children: any): any
-/**
- * 创建元素方法
- */
-export function createElement(this: Vue, type: string, attrs: any, children?: any) {
+export function createElement(this: Vue, type: string, attrs: any, children?: any): any {
   if (!Array.isArray(attrs) && typeof attrs === 'object') {
   } else {
     children = attrs
@@ -277,6 +303,6 @@ export function createElement(this: Vue, type: string, attrs: any, children?: an
  * 创建文本元素
  * @param text 文本
  */
-export function createTextElement(text: any) {
-  return createElement('text', text)
+export function createTextElement(this: Vue, text: any) {
+  return createElement.call(this, 'text', text)
 }

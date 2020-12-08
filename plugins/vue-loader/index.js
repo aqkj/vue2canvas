@@ -40,11 +40,11 @@ module.exports = function VueLoader(content, map) {
     else
         imports.push("const script = {}");
     if (descriptor.template) {
-        imports.push("import render from '" + resource + "?type=template';");
+        imports.push("import { render, staticRenderFns } from '" + resource + "?type=template';");
     }
     else
-        imports.push("const render = () => {}");
-    var code = hot_1.hot(imports.join('\n') + "export default { file: '" + this.resourcePath + "', ...(script || {}), render, styles }");
+        imports.push("const render = () => {};const staticRenderFns = []");
+    var code = hot_1.hot(imports.join('\n') + "export default { file: '" + this.resourcePath + "', ...(script || {}), render, staticRenderFns, styles }");
     return code;
 };
 function pitch(remainingRequest, precedingRequest, data) {
@@ -74,7 +74,7 @@ function converCodeFromType(_a) {
     }
     else if (type === 'template' && descriptor.template) {
         var _c = vue_template_compiler_1.compile(descriptor.template.content), staticRenderFns = _c.staticRenderFns, render = _c.render;
-        this.callback(null, "export default render; " + complier("function render(_h,_vm) {" + render + "}"), descriptor.template.map);
+        this.callback(null, "export { render, staticRenderFns }; " + complier("function render(_h,_vm) {" + render + "}\nvar staticRenderFns = [" + staticRenderFns.map(function (code) { return "function (_h,_vm) {" + code + "}"; }) + "]"), descriptor.template.map);
         return;
     }
     return;

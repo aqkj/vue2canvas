@@ -1,6 +1,7 @@
 // div组件
 import Vue from "../..";
 import { EventTrigger } from "../../common/event";
+import { parseUnit } from "../../common/utils";
 import { RealElement } from "../element";
 import { render } from "../render";
 const imgCache: Record<string, HTMLImageElement> = {}
@@ -14,15 +15,24 @@ export default class DIV extends EventTrigger {
     super()
     this.ctx = this.vm.$ctx as CanvasRenderingContext2D
     const attrs = this.element.attrs
-    this.styles = this.element.styles
+    this.styles = {
+      ...this.element.extendStyles,
+      ...this.element.styles
+    }
     // console.log(this.styles)
   }
   render() {
     this.ctx.save()
     this.createBox()
+    // 颜色
     this.drawColor()
+    // 画文字
+    this.drawText()
+    // 图片
     this.drawImage()
+    // 超出
     this.parseOverflow()
+    // 初始化事件
     this.initEvent()
     // 渲染子元素
     this.renderChild()
@@ -101,6 +111,21 @@ export default class DIV extends EventTrigger {
     }
   }
   /**
+   * 绘制文字
+   */
+  drawText() {
+    // 判断是否设置content
+    if (this.styles.content) {
+      // debugger
+      const boxSize = this.element.boxSize || {}
+      const position = this.element.curPosition
+      const fontSize = parseUnit(this.styles.fontSize) || 24
+      this.ctx.font = `${fontSize}px "微软雅黑"`
+      this.ctx.textAlign="left";
+      this.ctx.fillText(this.styles.content, position.x, position.y + fontSize / 2)
+    }
+  }
+  /**
    * 溢出处理
    */
   parseOverflow() {
@@ -154,3 +179,11 @@ export default class DIV extends EventTrigger {
 //   createBox(element, vm)
 //   vm.$ctx.stroke()
 // }
+/**
+ * 渲染div
+ * @param $el 元素
+ * @param vm vue实例
+ */
+export function renderDIV($el: RealElement, vm: Vue) {
+  return new DIV($el, vm).render()
+}

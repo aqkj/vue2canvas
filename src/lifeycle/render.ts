@@ -9,4 +9,5 @@ export function initRender(vm: Vue) {
   vm.$render = vm.$options.render || function() {}
   vm.$createElement = createElement.bind(vm)
   vm._v = createTextElement.bind(vm)
+  // vm._v = createTextElement.bind(vm)
 }

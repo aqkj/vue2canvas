@@ -35,9 +35,9 @@ module.exports = function VueLoader(this: webpack.loader.LoaderContext, content:
         imports.push(`import script from '${resource}.${descriptor.script.lang || 'js'}!=!${require.resolve(`${module.filename}`)}!${resource}?type=script';`)
     } else imports.push(`const script = {}`)
     if (descriptor.template) {
-        imports.push(`import render from '${resource}?type=template';`)
-    } else imports.push(`const render = () => {}`)
-    let code: string = hot(`${imports.join('\n')}export default { file: '${this.resourcePath}', ...(script || {}), render, styles }`)
+        imports.push(`import { render, staticRenderFns } from '${resource}?type=template';`)
+    } else imports.push(`const render = () => {};const staticRenderFns = []`)
+    let code: string = hot(`${imports.join('\n')}export default { file: '${this.resourcePath}', ...(script || {}), render, staticRenderFns, styles }`)
     return code
 }
 function pitch(this: webpack.loader.LoaderContext, remainingRequest: any, precedingRequest: any, data: any) {
@@ -72,7 +72,7 @@ function converCodeFromType(this: webpack.loader.LoaderContext, {
     } else if (type === 'template' && descriptor.template) {
 
         const { staticRenderFns, render } = compile(descriptor.template.content)
-        this.callback(null, `export default render; ${complier(`function render(_h,_vm) {${render}}`)}`, (descriptor.template as any).map)
+        this.callback(null, `export { render, staticRenderFns }; ${complier(`function render(_h,_vm) {${render}}\nvar staticRenderFns = [${staticRenderFns.map(code => `function (_h,_vm) {${code}}`)}]`)}`, (descriptor.template as any).map)
         return
     }
     return
