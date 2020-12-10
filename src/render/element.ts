@@ -1,6 +1,8 @@
 // 元素操作
 
 import Vue from ".."
+import { hot } from "../../plugins/vue-loader/hot"
+import config from "../common/config"
 import { forEach, parseUnit } from "../common/utils"
 import { renderComponentNames } from "./render"
 import { getStyles } from './style'
@@ -42,11 +44,11 @@ interface IAttrs {
   /** 属性列表 */
   attrs: Record<string, any>
 }
-interface IPosition {
+export interface IPosition {
   x: number
   y: number
 }
-interface ISize {
+export interface ISize {
   width: number
   height: number
 }
@@ -86,24 +88,70 @@ export class RealElement {
     y: 0
   }
   value: string = ''
+  width: number
+  height: number
+  contents: string[] = []
   // 获取id
   get id(): string {
     return this.attrs && this.attrs.attrs && this.attrs.attrs.id
   }
-  /** 盒子大小 */
-  get boxSize(): ISize {
-    let { width, height, display } = this.styles as any
-    width = parseUnit(width)
-    height = parseUnit(height)
+  /**
+   * 内容高度
+   */
+  get contentHeight(): number {
+    const { fontSize = 24 } = this.styles as any
+    return fontSize
+  }
+  /**
+   * 内容宽度
+   */
+  get contentWidth(): number {
+    let { fontSize = 24 } = this.styles as any
+    if (!this.value) return 0
+    const ctx = this.vm.$ctx
+    ctx.font = `${fontSize}px 微软雅黑`
+    const size = ctx.measureText(this.value)
+    return size.width
+  }
+  /**
+   * 内容盒子大小
+   */
+  get contentBoxSize(): ISize {
+    let { display } = this.styles as any
+    let width = this.width
+    let height = this.height
     // console.log(height)
+    const sizeWidth = this.contentWidth
     if (!width) {
       if (display === 'inline' || display === 'inline-block') {
+      //   // const size = this.getContentSize()
+      //   if (!this.children.length) {
+      //     // console.log(size, this.childSize.width)
+      //     width = sizeWidth
+      //   } else {
         width = this.childSize.width
-      } else {
-        width = 750
       }
+      //   // console.log(size)
+      // } else {
+      //   width = config.pageWidth
+      // }
     }
-    if (!height) height = this.childSize.height
+    if (!height) {
+      // if (!this.children.length) {
+      //   const sizeheight = this.contentHeight
+      //   height = sizeheight
+      // }
+      // else 
+      height = this.childSize.height
+    }
+    return {
+      width,
+      height
+    }
+  }
+  /** 盒子大小 */
+  get boxSize(): ISize {
+    const { width, height } = this.contentBoxSize
     return {
       width,
       height
@@ -174,6 +222,7 @@ export class RealElement {
         inheritStyles.forEach(styleName => {
           if (!_extendStyles[styleName]) _extendStyles[styleName] = (el.styles as Record<string, any>)[styleName]
         })
+        // console.log(el.styles)
         el = el.parent as RealElement
       }
       return _extendStyles as CSSStyleDeclaration
@@ -201,6 +250,7 @@ export class RealElement {
       const name = key.replace(/(\-\w)/g, a => a.slice(1).toUpperCase())
       ;(this.styles as any)[name] = (styles as any)[key]
     })
+    handlerStyles(this)
   }
   /**
    * 查找className
@@ -208,6 +258,70 @@ export class RealElement {
   hasClass(className: string): boolean {
     return this.classes.indexOf(className) !== -1
   }
+}
+/**
+ * 处理样式
+ * @param el 元素
+ */
+function handlerStyles(el: RealElement) {
+  initContent(el)
+  let { width, height, display } = el.styles as any
+  width = parseUnit(width)
+  height = parseUnit(height)
+  if (width) el.width = width
+  else {
+    // debugger
+    if (display !== 'inline-block' || display !== 'inline') el.width = config.pageWidth
+  }
+  if (height) el.height = height
+  // el.contentSize.width = width
+  // el.contentSize.height = height
+}
+/**
+ * 获取内容宽高
+ */
+function initContent(el): string[] {
+  let { fontSize = 24 } = el.styles as any
+  if (!el.value) return []
+  // fontSize = (parseUnit(fontSize) || 24)
+  const parentBoxSize = el.parent && el.parent.boxSize || { width: config.pageWidth }
+  const ctx = el.vm.$ctx
+  ctx.font = `${fontSize}px 微软雅黑`
+  let content = el.value
+  let lineContent = []
+  let tempContent = ''
+  let width = 0
+  let tempWidth = 0
+  while (content) {
+    // debugger
+    let _width = tempWidth
+    const contentChar = content.substr(0, 1)
+    // 获取大小
+    const size = ctx.measureText(contentChar)
+    // 增加
+    _width += size.width
+    if (_width <= parentBoxSize.width) {
+      tempWidth = _width
+      tempContent += contentChar
+      if (content.length === 1) {
+        lineContent.push(tempContent)
+        width = width > _width ? width : _width
+      }
+    } else {
+      lineContent.push(tempContent)
+      tempContent = contentChar
+      width = tempWidth
+      tempWidth = size.width
+    }
+    // 赋值内容
+    content = content.slice(1)
+  }
+  el.contents = lineContent
+  el.width = width
+  el.height = lineContent.length * fontSize
+  // const size: TextMetrics = ctx.measureText(this.value)
+  // console.log(size.width)
+  // return lineContent
 }
 /**
  * 处理class

@@ -2,7 +2,7 @@
 import Vue from "../..";
 import { EventTrigger } from "../../common/event";
 import { parseUnit } from "../../common/utils";
-import { RealElement } from "../element";
+import { RealElement, ISize } from "../element";
 import { render } from "../render";
 const imgCache: Record<string, HTMLImageElement> = {}
 /**
@@ -19,6 +19,7 @@ export default class DIV extends EventTrigger {
       ...this.element.extendStyles,
       ...this.element.styles
     }
+    debugger
     // console.log(this.styles)
   }
   render() {
@@ -42,10 +43,10 @@ export default class DIV extends EventTrigger {
    * 初始化事件
    */
   initEvent() {
-    const boxSize = this.element.realBoxSize || {}
+    const boxSize = this.element.realBoxSize || {} as ISize
     const curPosition = this.element.curPosition
     this.$on('touchmove', (e: TouchEvent, index: number) => {
-      const touch = (e.touches[0] || {})
+      const touch = (e.touches.item(0) || {}) as Touch
       const position = {
         x: touch.clientX * 2,
         y: touch.clientY * 2
@@ -80,7 +81,8 @@ export default class DIV extends EventTrigger {
     const backgroundColor = this.styles.backgroundColor || ''
     // 判断背景颜色是否存在
     if (backgroundColor) {
-      const boxSize = this.element.boxSize || {}
+      // debugger
+      const boxSize = this.element.boxSize
       const position = this.element.curPosition
       // console.log(boxSize, position)
       this.ctx.beginPath();
@@ -93,20 +95,22 @@ export default class DIV extends EventTrigger {
    * 绘制图片
    */
   drawImage() {
-    const backgroundImage = this.styles.backgroundImage || ''
+    let { backgroundImage = '', backgroundSize = '' } = this.styles
     // 判断背景图是否存在
     if (backgroundImage) {
-      const boxSize = this.element.boxSize || {}
+      const boxSize = this.element.boxSize
       const position = this.element.curPosition
-      if (!imgCache[backgroundImage]) {
+      backgroundImage = backgroundImage.match(/url\(\"(.*)\"\)/)[1]
+      let imageData = imgCache[backgroundImage]
+      if (!imageData) {
         const img = document.createElement('img')
         img.onload = () => {
-          this.ctx.drawImage(img, position.x, position.y, boxSize.width, boxSize.height)
+          this.ctx.drawImage(img, 0, 0, img.width, img.height, position.x, position.y, boxSize.width, boxSize.height)
         }
         img.src = backgroundImage
         imgCache[backgroundImage] = img
       } else {
-        this.ctx.drawImage(imgCache[backgroundImage], position.x, position.y, boxSize.width, boxSize.height)
+        this.ctx.drawImage(imageData, 0, 0, imageData.width, imageData.height, position.x, position.y, boxSize.width, boxSize.height)
       }
     }
   }
@@ -115,14 +119,26 @@ export default class DIV extends EventTrigger {
    */
   drawText() {
     // 判断是否设置content
-    if (this.styles.content) {
+    if (this.element.value) {
       // debugger
-      const boxSize = this.element.boxSize || {}
+      const boxSize = this.element.boxSize
+      // const contentSize = this.element.contentSize
       const position = this.element.curPosition
-      const fontSize = parseUnit(this.styles.fontSize) || 24
-      this.ctx.font = `${fontSize}px "微软雅黑"`
-      this.ctx.textAlign="left";
-      this.ctx.fillText(this.styles.content, position.x, position.y + fontSize / 2)
+      const fontSize = parseUnit(this.styles.fontSize as any)
+      const color = this.styles.color
+      // if (!contentSize.height) {
+      //   debugger
+      //   contentSize.height += fontSize
+      // }
+      this.ctx.font = `${fontSize}px 微软雅黑`
+      this.ctx.textAlign = 'left'
+      this.ctx.fillStyle = color || '#000'
+      this.ctx.textBaseline = 'top'
+      // console.log(this.element.contents)
+      this.element.contents.forEach((content, index) => {
+        this.ctx.fillText(content, position.x, position.y + fontSize * index)
+      })
+      // debugger
     }
   }
   /**

@@ -82,13 +82,17 @@ export function getStyles(el: RealElement) {
  * @param styleStr 样式字符串
  */
 function parseStyle(styleStr: string): Record<string, any> {
-  const styleArr: string[] = styleStr.slice(1, -1).split(';')
+  // return
+  styleStr = styleStr.slice(1, -1).trim().replace(/\;( +)/g, '|')
+  const styleArr: string[] = styleStr.split('|')
   const styles: Record<string, any> = {}
   styleArr.forEach(style => {
     style = style.trim()
-    const temp = style.split(':')
+    const temp = style.split(': ')
     if (temp.length && temp[0]) {
-      styles[temp[0].trim()] = (temp[1] || '').trim()
+      let value = (temp[1] || '').trim()
+      if (value[value.length - 1] === ';') value = value.slice(0, -1)
+      styles[temp[0].trim()] = value
     }
   })
   return styles

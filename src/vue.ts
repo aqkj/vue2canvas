@@ -1,6 +1,7 @@
 // vue
 import { initCanvas } from "./lifeycle/canvas"
 import { initComponents } from "./lifeycle/component"
+import { initData } from "./lifeycle/data"
 import { initEvent } from "./lifeycle/event"
 import { initRender } from "./lifeycle/render"
 import { createElement, RealElement } from "./render/element"
@@ -9,6 +10,9 @@ let vmCount = 0
 /**
  * Vue类配置信息
  */
+interface IRenderFunc {
+  (h?: any): void
+}
 interface IOptions {
   /** canvas元素 */
   el?: Element | Node | null | string
@@ -17,12 +21,15 @@ interface IOptions {
   isComp?: boolean
   /** 组件 */
   components?: Record<string, IOptions> | IOptions[]
+  /** 静态渲染方法数组 */
+  staticRenderFns?: IRenderFunc[]
   /** 渲染方法 */
-  render?: (h?: any) => void
+  render?: IRenderFunc
 }
 export default class Vue {
   _self: Vue
   _v: any
+  _m: any
   uid: number
   $render: any
   $element?: RealElement
@@ -32,6 +39,7 @@ export default class Vue {
   $parent?: Vue
   $children: Vue[] = []
   $components: Record<string, any> = {}
+  $data?: Record<string, any> = {}
   name?: string
   constructor(public $options: IOptions) {
     if (!this.$options.el && !this.$options.isComp) console.error('[vue] el是必须的')
@@ -40,21 +48,20 @@ export default class Vue {
     initEvent(this)
     initRender(this)
     initComponents(this)
+    initData(this)
   }
   /**
    * 渲染
    */
   $mount() {
     // 设置root
-    this.$root = this.$parent ? this.$parent.$root : this
+    this.$root = this.$parent ? this.$parent.$root ? this.$parent.$root : this.$parent : this
+    debugger
     initCanvas(this)
     /**
      * 渲染循环
      */
     const renderLoop = () => {
-      this.$children = []
-      this.$element = this.$render(createElement.bind(this))
-      this.$element && (this.$element.vm = this)
       if (this.$ctx) {
         // 清理渲染
         this.$ctx.clearRect(0, 0, 1000, 1000)
@@ -62,11 +69,11 @@ export default class Vue {
       // 第一次渲染
       firstRender(this, this.$element as RealElement)
       // 渲染循环
-      if (!this.$options.isComp) window.requestAnimationFrame(renderLoop)
+      // if (!this.$options.isComp) window.requestAnimationFrame(renderLoop)
     }
     // 非组件才会调
-    if (!this.$options.isComp) window.requestAnimationFrame(renderLoop)
-    else renderLoop()
+    // if (!this.$options.isComp) window.requestAnimationFrame(renderLoop)
+    renderLoop()
   }
   /**
    * 继承

@@ -30,3 +30,25 @@ const arrayProto = Array.prototype
 export function forEach(list: any, callback: any) {
   arrayProto.forEach.call(list, callback)
 }
+/**
+ * 转换为字符串
+ * @param val 
+ */
+export function toString (val) {
+  return val == null
+    ? ''
+    : Array.isArray(val) || (isPlainObject(val) && val.toString === _toString)
+      ? JSON.stringify(val, null, 2)
+      : String(val)
+}
+/**
+ * 判断是否是object类型
+ * @param obj 
+ */
+export function isPlainObject (obj) {
+  return _toString.call(obj) === '[object Object]'
+}
+/**
+ * 转换为字符串
+ */
+export const _toString = Object.prototype.toString;

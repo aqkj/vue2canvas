@@ -23,6 +23,17 @@ export function render(vm: Vue, element: RealElement) {
   componentsRender(vm, element)
 }
 /**
+ * 静态渲染
+ * @param index 
+ */
+export function renderStatic(this: Vue, index: number) {
+  const staticRenderFns = this.$options.staticRenderFns
+  if (staticRenderFns) {
+    const render = staticRenderFns[index]
+    return render.call(this, createElement.bind(this))
+  }
+}
+/**
  * 渲染方法
  * @param {RealElement} element 元素
  */
