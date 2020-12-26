@@ -34,7 +34,10 @@ export function getStyles(el: RealElement) {
     // const styles = domClass[className]
     // vm.attrs.staticClass
     // el.type
-    const selectorArr: string[] = cssSelector.split(' ')
+    // if (el.type === 'img') {
+    //   debugger
+    // }
+    const selectorArr: string[] = cssSelector.split(' ').reverse()
     // 获取最后一个选择器
     // const lastSelector: string = selectorArr[selectorArr.length - 1]
     // // 是否是类选择器
@@ -58,12 +61,12 @@ export function getStyles(el: RealElement) {
           let result = false
           if (isClassSelector) {
             // 判断是否存在这个class
-            result = el.hasClass(realSelector)
+            result = element.hasClass(realSelector)
           } else if (isIdSelector) { // 判断是否是id选择器
             // 判断当前id是否相同
-            result = el.id === realSelector
+            result = element.id === realSelector
           } else { // 则为类型选择器
-            result = el.type === selector
+            result = element.type === selector
           }
           element = element.parent
           if (result) return true
@@ -104,4 +107,12 @@ function parseClassName(className: string): string[] {
   if (!className) return []
   const classNames: string[] = className.split(',').map(name => name.trim())
   return classNames
+}
+/**
+ * 默认样式
+ */
+export const defaultStyle: Record<string, any> = {
+  IMG: {
+    display: 'inline-block'
+  }
 }

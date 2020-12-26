@@ -1,6 +1,8 @@
 <template>
   <div class="app">
-    <img src="https://file.40017.cn/huochepiao/activity/20201117pietyby/images/title.4f0f513f.png"/>
+    <div class="app2">
+      <img class="img" src="https://file.40017.cn/huochepiao/activity/20201117pietyby/images/title.4f0f513f.png"/>
+    </div>
     <div class="comp">
       <div class="a">{{ content }}</div>
       <div class="a">{{ content1 }}</div>
@@ -29,7 +31,15 @@ export default {
   font-size: 24px;
   background-image: url(https://file.40017.cn/huochepiao/activity/20201117pietyby/images/bg.cddd8281.png);
   background-size: contain;
-  height: 527px;
+  background-position:left top;
+  height: 100vh;
+  .img{
+    display: block;
+    margin: 0 auto;
+    // margin-bottom: 100px;
+    // width: 300px;
+    // margin-left: 50px;
+  }
 }
 .comp{
   font-size: 0;

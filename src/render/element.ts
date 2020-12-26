@@ -4,10 +4,12 @@ import Vue from ".."
 import { hot } from "../../plugins/vue-loader/hot"
 import config from "../common/config"
 import { forEach, parseUnit } from "../common/utils"
+import { loadImage } from "../lifeycle/render"
 import { renderComponentNames } from "./render"
-import { getStyles } from './style'
+import { defaultStyle, getStyles } from './style'
 // 可继承的样式
 export const inheritStyles: string[] = ['fontSize', 'color', 'fontFamily']
+const imgCache: Record<string, any> = {}
 /**
  * 元素接口
  */
@@ -53,6 +55,15 @@ export interface ISize {
   height: number
 }
 /**
+ * 偏移位置
+ */
+export interface IOffset<T> {
+  top: T
+  left: T
+  right: T
+  bottom: T
+}
+/**
  * Vue元素
  */
 export class RealElement {
@@ -71,7 +82,7 @@ export class RealElement {
   // 真实clas
   classes: string[] = []
   /** 子元素 */
-  children: any[] = []
+  children: RealElement[] = []
   /** 父元素 */
   parent?: RealElement
   /** 兄弟元素 */
@@ -88,9 +99,30 @@ export class RealElement {
     y: 0
   }
   value: string = ''
-  width: number
+  _width: number = 0
+  get width() : number {
+    return this._width
+  }
+  set width(val) {
+    this._width = val
+    ;['margin', 'padding'].forEach(offset => initOffset(this, offset))
+  }
   height: number
   contents: string[] = []
+  comp: Vue = null
+  backgroundImage: any
+  margin: IOffset<number> = {
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0
+  }
+  padding: IOffset<number> = {
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0
+  }
   // 获取id
   get id(): string {
     return this.attrs && this.attrs.attrs && this.attrs.attrs.id
@@ -121,7 +153,7 @@ export class RealElement {
     let width = this.width
     let height = this.height
     // console.log(height)
-    const sizeWidth = this.contentWidth
+    // const sizeWidth = this.contentWidth
     if (!width) {
       if (display === 'inline' || display === 'inline-block') {
       //   // const size = this.getContentSize()
@@ -151,10 +183,38 @@ export class RealElement {
   }
   /** 盒子大小 */
   get boxSize(): ISize {
-    const { width, height } = this.contentBoxSize
+    let { width, height } = this.contentBoxSize
+    let { top, bottom, left, right } = this.marginSize
+    // if (this.type === 'img') {
+    //   debugger
+    // }
+    width += left + right
+    height += top + bottom
     return {
       width,
       height
+    }
+  }
+  /**
+   * 偏移大小
+   */
+  get marginSize(): IOffset<number> {
+    // 获取margin值
+    let { top = 0, left = 0, bottom = 0, right = 0 } = this.margin as any
+    // 大小
+    
+    // if (margin) {
+    //   margin = margin.split(' ') as string[]
+    //   const marginLength = margin.length
+    //   if (marginLength === 1) {
+    //     marginTop
+    //   }
+    // }
+    return {
+      top,
+      left,
+      right,
+      bottom
     }
   }
   /**
@@ -202,10 +262,17 @@ export class RealElement {
     // 基础坐标
     const position: IPosition = parent ? {...parent.curPosition} : {x: 0, y: 0}
     let prevSibling = element.prevSibling
+    let { top, bottom, left, right } = this.marginSize
     while(prevSibling) {
       // position.x += prevSibling.boxSize.height || 0
       position.y += prevSibling.boxSize.height || 0
       prevSibling = prevSibling.prevSibling
+    }
+    position.x += left
+    position.y += top
+    if (this.type === 'img') {
+
+    debugger
     }
     return position
   }
@@ -219,6 +286,9 @@ export class RealElement {
       const _extendStyles: Record<string, any> = {}
       while (el) {
         // const styles = el.styles
+        // if (el.parent.comp) {
+        //   el = el.parent as RealElement
+        // }
         inheritStyles.forEach(styleName => {
           if (!_extendStyles[styleName]) _extendStyles[styleName] = (el.styles as Record<string, any>)[styleName]
         })
@@ -237,26 +307,61 @@ export class RealElement {
   constructor(options: IOptions) {
     this.vm = options.vm
     this.$options = options
+    // debugger
+    if (typeof options.type === 'object') {
+      const comp = options.type as any
+      // 组件构造函数
+      const CompCtor = this.vm.extend(comp)
+      // // 设置构造器
+      // this.Ctor = CompCtor
+      const vmComp = new CompCtor() as Vue
+      // // 设置名称
+      options.type = comp.name || `vue-component-${vmComp.uid}`
+      this.comp = vmComp
+      // debugger
+      if (vmComp.$element) this.children.push(vmComp.$element)
+    } else if (!renderComponentNames.includes(options.type)) { // 判断是否是自定义组件
+      // console.log(type)
+      const CompCtor = this.vm.$components[options.type]
+      if (CompCtor) {
+        const vmComp = new CompCtor()
+        this.comp = vmComp
+        // // 设置名称
+        options.type = vmComp.name || `vue-component-${vmComp.uid}`
+        if (vmComp.$element) this.children.push(vmComp.$element)
+      } else {
+        console.log('未定义的自定义组件')
+      }
+    }
     this.type = options.type
     this.attrs = options.attrs || {}
     this.styles = {} as any
     mergeClass(this)
     linkParent(this, options.children || [])
     makeRender(this)
-    getStyles(this)
-    const styles = Object.assign({}, this.styles, this.attrs.staticStyle, this.attrs.style)
-    this.styles = {} as any
-    Object.keys(styles).forEach(key => {
-      const name = key.replace(/(\-\w)/g, a => a.slice(1).toUpperCase())
-      ;(this.styles as any)[name] = (styles as any)[key]
-    })
-    handlerStyles(this)
   }
   /**
    * 查找className
    */
   hasClass(className: string): boolean {
     return this.classes.indexOf(className) !== -1
+  }
+  /**
+   * 初始化样式
+   */
+  initStyles() {
+    getStyles(this)
+    const styles = Object.assign({}, defaultStyle[this.type.toUpperCase()] || {}, this.styles, this.attrs.staticStyle, this.attrs.style)
+    this.styles = {} as any
+    Object.keys(styles).forEach(key => {
+      const name = key.replace(/(\-\w)/g, a => a.slice(1).toUpperCase())
+      ;(this.styles as any)[name] = (styles as any)[key]
+    })
+    handlerStyles(this)
+    // 遍历子元素进行初始化
+    this.children.forEach(child => {
+      child.initStyles()
+    })
   }
 }
 /**
@@ -271,11 +376,99 @@ function handlerStyles(el: RealElement) {
   if (width) el.width = width
   else {
     // debugger
-    if (display !== 'inline-block' || display !== 'inline') el.width = config.pageWidth
+    if (display !== 'inline-block' && display !== 'inline') el.width = config.pageWidth
   }
   if (height) el.height = height
   // el.contentSize.width = width
   // el.contentSize.height = height
+  // 处理参数带url
+  initLoadUrl(el)
+  ;['margin', 'padding'].forEach(offset => initOffset(el, offset))
+}
+/**
+ * 初始化偏移
+ * @param el 元素
+ */
+function initOffset(el: RealElement, type: string) {
+  let { [type]: offset, [`${type}Left`]: offsetLeft, [`${type}Top`]: offsetTop, [`${type}Bottom`]: offsetBottom, [`${type}Right`]: offsetRight } = el.styles as any
+  if (offset || offsetLeft || offsetTop || offsetBottom || offsetRight) return
+  const elOffset = el[type]
+  // debugger
+  const size = el.parent && el.parent.contentBoxSize || { width: config.pageWidth, height: 0 }
+  // 自身大小
+  const width = el.width
+  const diffWidth: number = (size.width - width)
+  let valueOf = val => val === 'auto' ? diffWidth : parseUnit(val)
+  if (offset) {
+    offset = offset.split(' ') as string[]
+    const marginLength = offset.length
+    if (marginLength === 1) {
+      elOffset.top = elOffset.bottom = elOffset.left = elOffset.right = valueOf(offset[0])
+    } else if (marginLength === 2) {
+      elOffset.top = elOffset.bottom = valueOf(offset[0])
+      elOffset.left = elOffset.right = valueOf(offset[1])
+    } else if (marginLength === 4) {
+      elOffset.top = valueOf(offset[0])
+      elOffset.right = valueOf(offset[1])
+      elOffset.bottom = valueOf(offset[2])
+      elOffset.left = valueOf(offset[3])
+    }
+  }
+  if (offsetLeft) {
+    elOffset[`${type}Left`] = valueOf(offsetLeft)
+  }
+  if (offsetRight) {
+    elOffset[`${type}Right`] = valueOf(offsetRight)
+  }
+  if (offsetTop) {
+    elOffset[`${type}Top`] = valueOf(offsetTop)
+  }
+  if (offsetBottom) {
+    elOffset[`${type}Bottom`] = valueOf(offsetBottom)
+  }
+}
+/**
+ * 初始化加载url
+ * @param el 元素对象
+ */
+function initLoadUrl(el: RealElement) {
+  let { backgroundImage, width, height } = el.styles
+  let { src } = el.attrs && el.attrs.attrs || {}
+  // 判断是否存在src属性
+  if (el.type === 'img' && src) {
+    el.backgroundImage = loadImage(src, () => {
+      // 强制更新
+      // el.vm.$root.$foceUpdate()
+      if (!width) {
+        el.width = el.backgroundImage.width
+      }
+      if (!height) {
+        el.height = el.backgroundImage.height
+      }
+    }) as HTMLImageElement
+    // debugger
+  } else if (backgroundImage) {
+    backgroundImage = backgroundImage.match(/url\(\"(.*)\"\)/)[1]
+    // let imageData = imgCache[backgroundImage]
+    el.backgroundImage = loadImage(backgroundImage, () => {
+      // 强制更新
+      // el.vm.$root.$foceUpdate()
+      // debugger
+    })
+    // if (!imageData) {
+    //   const img = document.createElement('img')
+    //   img.onload = () => {
+    //     el.backgroundImage = img
+    //     // 强制更新
+    //     el.vm.$root.$foceUpdate()
+    //   }
+    //   img.src = backgroundImage
+    //   imgCache[backgroundImage] = img
+    // } else {
+    //   el.backgroundImage = imageData
+    //   // this.ctx.drawImage(imageData, 0, 0, imageData.width, imageData.height, position.x, position.y, boxSize.width, boxSize.height)
+    // }
+  }
 }
 /**
  * 获取内容宽高
@@ -339,7 +532,7 @@ function mergeClass(el: RealElement) {
  * @param children 子
  */
 function linkParent(parent: RealElement, children: any) {
-  children = [].concat(children)
+  children = parent.children.concat(children)
   // 文本
   if (parent.type === 'text') {
     parent.value = children.toString()
@@ -385,33 +578,33 @@ export function createElement(this: Vue, type: string, attrs: any, children?: an
     children = attrs
     attrs = {}
   }
-  if (typeof type === 'object') {
-    const comp = type as any
-    // 组件构造函数
-    const CompCtor = this.extend(comp)
-    // // 设置名称
-    // this.type = comp.name || `vue-component-name`
-    // // 设置构造器
-    // this.Ctor = CompCtor
-    const vmComp = new CompCtor()
-    return vmComp.$element
-  } else {
+  // if (typeof type === 'object') {
+  //   const comp = type as any
+  //   // 组件构造函数
+  //   const CompCtor = this.extend(comp)
+  //   // // 设置名称
+  //   // this.type = comp.name || `vue-component-name`
+  //   // // 设置构造器
+  //   // this.Ctor = CompCtor
+  //   const vmComp = new CompCtor()
+  //   return vmComp
+  // } else {
     // 判断是否不为原生组件
-    if (!renderComponentNames.includes(type)) {
-      // console.log(type)
-      const CompCtor = this.$components[type]
-      if (CompCtor) {
-        const vmComp = new CompCtor()
-        return vmComp.$element
-      }
-    }
+    // if (!renderComponentNames.includes(type)) {
+    //   // console.log(type)
+    //   const CompCtor = this.$components[type]
+    //   if (CompCtor) {
+    //     const vmComp = new CompCtor()
+    //     return vmComp
+    //   }
+    // }
     return new RealElement({
       type,
       attrs,
       children,
       vm: this
     })
-  }
+  // }
 }
 /**
  * 创建文本元素

@@ -13,11 +13,14 @@ export let elements: any[] = []
  * @param {RealElement} element 元素
  */
 export function firstRender(vm: Vue, ele: RealElement) {
-  elements = []
+  // elements = []
   // vm.$children = []
   render(vm, ele)
 }
 export function render(vm: Vue, element: RealElement) {
+  // debugger
+  // 组件元素不做渲染
+  // if (element.comp) return
   // elements = []
   // 渲染组件
   componentsRender(vm, element)

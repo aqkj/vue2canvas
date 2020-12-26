@@ -41,26 +41,28 @@ export default class Vue {
   $components: Record<string, any> = {}
   $data?: Record<string, any> = {}
   name?: string
-  constructor(public $options: IOptions) {
+  constructor(public $options: IOptions, parent?: Vue) {
     if (!this.$options.el && !this.$options.isComp) console.error('[vue] el是必须的')
     this._self = this
     this.uid = vmCount++
+    this.$parent = parent
+    // 设置root
+    this.$root = parent ? parent.$root ? parent.$root : parent : this
     initEvent(this)
-    initRender(this)
     initComponents(this)
     initData(this)
+    initCanvas(this)
+    initRender(this)
   }
   /**
    * 渲染
    */
   $mount() {
-    // 设置root
-    this.$root = this.$parent ? this.$parent.$root ? this.$parent.$root : this.$parent : this
-    debugger
-    initCanvas(this)
+    // debugger
     /**
      * 渲染循环
      */
+    // debugger
     const renderLoop = () => {
       if (this.$ctx) {
         // 清理渲染
@@ -70,10 +72,18 @@ export default class Vue {
       firstRender(this, this.$element as RealElement)
       // 渲染循环
       // if (!this.$options.isComp) window.requestAnimationFrame(renderLoop)
+      window.requestAnimationFrame(renderLoop)
     }
     // 非组件才会调
     // if (!this.$options.isComp) window.requestAnimationFrame(renderLoop)
-    renderLoop()
+    // renderLoop()
+    window.requestAnimationFrame(renderLoop)
+  }
+  /**
+   * 强制更新
+   */
+  $foceUpdate() {
+    firstRender(this.$root, this.$root.$element as RealElement)
   }
   /**
    * 继承
@@ -97,12 +107,18 @@ class VueComp extends Vue {
   constructor(options: IOptions, parent: Vue) {
     // 设置为组件
     options.isComp = true
-    super(options)
+    super(options, parent)
     // 设置父实例
-    this.$parent = parent
+    // this.$parent = parent
     // 关联
     parent.$children.push(this)
     // 挂载
-    this.$mount()
+    // this.$mount()
+  }
+  /**
+   * 子组件不需要render
+   */
+  $mount() {
+
   }
 }

@@ -1,7 +1,7 @@
 // div组件
 import Vue from "../..";
 import { EventTrigger } from "../../common/event";
-import { parseUnit } from "../../common/utils";
+import { parsePercentage, parsePosition, parseUnit } from "../../common/utils";
 import { RealElement, ISize } from "../element";
 import { render } from "../render";
 const imgCache: Record<string, HTMLImageElement> = {}
@@ -19,7 +19,7 @@ export default class DIV extends EventTrigger {
       ...this.element.extendStyles,
       ...this.element.styles
     }
-    debugger
+    // debugger
     // console.log(this.styles)
   }
   render() {
@@ -82,7 +82,7 @@ export default class DIV extends EventTrigger {
     // 判断背景颜色是否存在
     if (backgroundColor) {
       // debugger
-      const boxSize = this.element.boxSize
+      const boxSize = this.element.contentBoxSize
       const position = this.element.curPosition
       // console.log(boxSize, position)
       this.ctx.beginPath();
@@ -95,23 +95,52 @@ export default class DIV extends EventTrigger {
    * 绘制图片
    */
   drawImage() {
-    let { backgroundImage = '', backgroundSize = '' } = this.styles
+    const { backgroundImage } = this.element
+    let { backgroundSize = '', backgroundPosition = 'top left' } = this.styles
+    // debugger
     // 判断背景图是否存在
     if (backgroundImage) {
-      const boxSize = this.element.boxSize
+      // 大小
+      const boxSize = this.element.contentBoxSize
+      // 坐标
       const position = this.element.curPosition
-      backgroundImage = backgroundImage.match(/url\(\"(.*)\"\)/)[1]
-      let imageData = imgCache[backgroundImage]
-      if (!imageData) {
-        const img = document.createElement('img')
-        img.onload = () => {
-          this.ctx.drawImage(img, 0, 0, img.width, img.height, position.x, position.y, boxSize.width, boxSize.height)
-        }
-        img.src = backgroundImage
-        imgCache[backgroundImage] = img
-      } else {
-        this.ctx.drawImage(imageData, 0, 0, imageData.width, imageData.height, position.x, position.y, boxSize.width, boxSize.height)
+      // 裁剪数据
+      const imageOptions = {
+        startX: 0,
+        startY: 0,
+        imgWidth: backgroundImage.width,
+        imgHeight: backgroundImage.height,
+        drawX: position.x,
+        drawY: position.y,
+        drawWidth: boxSize.width,
+        drawHeight: boxSize.height
       }
+      if (this.element.type !== 'img') {
+        // debugger
+        if (backgroundSize === 'contain') { // 自适应背景大小
+          // imageOptions.drawWidth = imageOptions.imgWidth > boxSize.width ? boxSize.width : 
+          const diffHeight = boxSize.height - imageOptions.imgHeight
+          const diffWidth = boxSize.width - imageOptions.imgWidth
+          if (diffWidth > diffHeight) {
+            imageOptions.drawWidth = boxSize.height / imageOptions.imgHeight * imageOptions.imgWidth
+            imageOptions.drawHeight = boxSize.height
+          } else {
+            imageOptions.drawHeight = boxSize.width / imageOptions.imgWidth * imageOptions.imgHeight
+            imageOptions.drawWidth = boxSize.width
+          }
+        }
+        // 获取到position
+        let [posX, posY] = parsePosition(backgroundPosition) as any
+        posX = parsePercentage(posX, boxSize.width - imageOptions.drawWidth)
+        posY = parsePercentage(posY, boxSize.height - imageOptions.drawHeight)
+        // if (posX)
+        // debugger
+        imageOptions.drawX = posX
+        imageOptions.drawY = posY
+      }
+      // if () {
+      // }
+      this.ctx.drawImage(backgroundImage, imageOptions.startX, imageOptions.startY, imageOptions.imgWidth, imageOptions.imgHeight, imageOptions.drawX, imageOptions.drawY, imageOptions.drawWidth, imageOptions.drawHeight)
     }
   }
   /**
@@ -121,7 +150,7 @@ export default class DIV extends EventTrigger {
     // 判断是否设置content
     if (this.element.value) {
       // debugger
-      const boxSize = this.element.boxSize
+      const boxSize = this.element.contentBoxSize
       // const contentSize = this.element.contentSize
       const position = this.element.curPosition
       const fontSize = parseUnit(this.styles.fontSize as any)
@@ -148,7 +177,7 @@ export default class DIV extends EventTrigger {
     const overflow = this.styles.overflow || 'visible'
     // 判断溢出模式
     if (overflow !== 'visible') {
-      const boxSize = this.element.boxSize
+      const boxSize = this.element.contentBoxSize
       const position = this.element.curPosition
       this.ctx.beginPath();
       this.ctx.rect(position.x, position.y, boxSize.width, boxSize.height);

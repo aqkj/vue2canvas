@@ -15,6 +15,26 @@ export function initRender(vm: Vue) {
   ;(vm as any)._s = toString
   vm.$children = []
   vm.$element = vm.$render(createElement.bind(vm))
+  if (!vm.$options.isComp) vm.$element.initStyles()
   vm.$element && (vm.$element.vm = vm)
   // vm._v = createTextElement.bind(vm)
+}
+const imgCache: Record<string, any> = {}
+/**
+ * 加载图片资源
+ * @param url 资源
+ */
+export function loadImage(url: string, callback?: CallableFunction): HTMLImageElement | undefined {
+  if (!url) return undefined
+  const imageData = imgCache[url]
+  if (!imageData) {
+    const img = document.createElement('img')
+    img.onload = () => {
+      callback && callback()
+    }
+    img.src = url
+    imgCache[url] = img
+    return imgCache[url]
+  }
+  return imageData
 }
